@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>JobFlow — AI-Powered Job Tracking</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#0c0c0c;color:#fff;overflow-x:hidden;min-height:100vh}
+::selection{background:rgba(61,129,227,0.3)}
+a{text-decoration:none;color:inherit}
+button{font-family:'Inter',sans-serif;cursor:pointer}
+input,textarea,select{font-family:'Inter',sans-serif}
+
+/* ─── ANIMATIONS ─── */
+@keyframes shiny{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes toast-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.animate-shiny{animation:shiny 6s linear infinite}
+.fade-up{animation:fadeUp .6s cubic-bezier(.22,1,.36,1) both}
+.fade-in{animation:fadeIn .4s ease both}
+.slide-in{animation:slideIn .4s cubic-bezier(.22,1,.36,1) both}
+
+/* ─── GLASS ─── */
+.glass{background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08)}
+.glass-dark{background:rgba(0,0,0,0.5);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.07)}
+
+/* ─── PAGES ─── */
+.page{display:none;min-height:100vh}
+.page.active{display:block}
+
+/* ─── LANDING ─── */
+.land-bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.land-bg video{width:100%;height:100%;object-fit:cover;opacity:.45}
+.land-content{position:relative;z-index:1}
+
+/* NAV */
+.nav{padding:18px 0;position:sticky;top:0;z-index:100;background:rgba(12,12,12,.7);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06)}
+.nav-inner{max-width:72rem;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:.6rem;font-weight:700;font-size:1.1rem;letter-spacing:-.02em}
+.nav-logo-mark{width:28px;height:28px}
+.nav-links{display:flex;gap:2rem;align-items:center}
+.nav-link{font-size:.875rem;font-weight:500;color:rgba(255,255,255,.65);transition:color .2s}
+.nav-link:hover{color:#fff}
+.nav-actions{display:flex;gap:.75rem;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:.4rem;border:none;border-radius:9999px;font-weight:500;font-size:.875rem;padding:.65rem 1.25rem;transition:all .2s;cursor:pointer}
+.btn-ghost{background:transparent;color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.12)}
+.btn-ghost:hover{background:rgba(255,255,255,.06);color:#fff}
+.btn-white{background:#fff;color:#000}
+.btn-white:hover{background:rgba(255,255,255,.9);transform:translateY(-1px)}
+.btn-white:active{transform:scale(.98)}
+.btn-primary{background:linear-gradient(135deg,#3D81E3,#1a5cbf);color:#fff;border:none}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+.btn-danger{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+.btn-danger:hover{background:rgba(239,68,68,.25)}
+.btn-sm{font-size:.75rem;padding:.45rem .9rem}
+.btn-lg{font-size:1rem;padding:.8rem 1.75rem}
+.btn-icon{width:2rem;height:2rem;padding:0;justify-content:center;border-radius:.5rem}
+
+/* HERO */
+.hero{padding:6rem 1.5rem 5rem;text-align:center;display:flex;flex-direction:column;align-items:center;max-width:72rem;margin:0 auto}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:.5rem;font-size:.75rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.5);padding:.4rem 1rem;border-radius:9999px;border:1px solid rgba(255,255,255,.1);margin-bottom:2rem;background:rgba(255,255,255,.03)}
+.hero h1{font-size:clamp(2.5rem,7vw,5rem);font-weight:800;letter-spacing:-.04em;line-height:.95;margin-bottom:1.75rem}
+.gradient-text{background:linear-gradient(135deg,#A4F4FD 0%,#3D81E3 40%,#A4F4FD 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.hero p{font-size:1.1rem;color:rgba(255,255,255,.6);max-width:34rem;line-height:1.65;margin-bottom:2.5rem}
+.hero-actions{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+.hero-stats{display:flex;gap:3rem;margin-top:4rem;padding-top:2.5rem;border-top:1px solid rgba(255,255,255,.08)}
+.hero-stat-val{font-size:2rem;font-weight:700;letter-spacing:-.03em;color:#fff}
+.hero-stat-label{font-size:.75rem;color:rgba(255,255,255,.4);margin-top:.25rem}
+
+/* FEATURES */
+.section{padding:5rem 1.5rem;max-width:72rem;margin:0 auto}
+.section-eyebrow{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.4);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.section-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:#3D81E3}
+.section-title{font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;letter-spacing:-.03em;line-height:1.1;margin-bottom:1rem}
+.section-sub{font-size:1rem;color:rgba(255,255,255,.55);max-width:32rem;line-height:1.6}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem;margin-top:3rem}
+.feature-card{padding:1.75rem;border-radius:1rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);transition:all .3s}
+.feature-card:hover{background:rgba(255,255,255,.05);border-color:rgba(61,129,227,.3);transform:translateY(-4px)}
+.feature-icon{width:40px;height:40px;border-radius:.625rem;background:rgba(61,129,227,.15);display:flex;align-items:center;justify-content:center;margin-bottom:1rem}
+.feature-title{font-size:1rem;font-weight:600;margin-bottom:.5rem}
+.feature-desc{font-size:.875rem;color:rgba(255,255,255,.55);line-height:1.6}
+
+/* DASHBOARD PREVIEW */
+.dash-preview{margin:0 auto;max-width:72rem;padding:0 1.5rem 5rem}
+.dash-frame{border-radius:1rem;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:rgba(14,16,20,.95)}
+.dash-titlebar{display:flex;align-items:center;padding:.65rem 1rem;background:rgba(0,0,0,.4);border-bottom:1px solid rgba(255,255,255,.06)}
+.dot{width:12px;height:12px;border-radius:50%;margin-right:.375rem}
+.dash-preview-inner{display:grid;grid-template-columns:200px 1fr;height:320px}
+.preview-sidebar{background:rgba(0,0,0,.3);border-right:1px solid rgba(255,255,255,.06);padding:1rem;display:flex;flex-direction:column;gap:.25rem}
+.preview-nav-item{display:flex;align-items:center;gap:.6rem;padding:.5rem .75rem;border-radius:.5rem;font-size:.75rem;color:rgba(255,255,255,.5)}
+.preview-nav-item.active-nav{background:rgba(61,129,227,.15);color:#3D81E3}
+.preview-main{padding:1.25rem;display:flex;flex-direction:column;gap:1rem;overflow:hidden}
+.preview-stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}
+.preview-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:.625rem;padding:.75rem;text-align:center}
+.preview-stat-num{font-size:1.25rem;font-weight:700}
+.preview-stat-lbl{font-size:.6rem;color:rgba(255,255,255,.4);margin-top:.2rem}
+
+/* PRICING */
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.25rem;margin-top:3rem}
+.price-card{border-radius:1.25rem;padding:2rem 1.5rem;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);display:flex;flex-direction:column;gap:1.25rem;transition:all .3s}
+.price-card:hover{border-color:rgba(61,129,227,.4);transform:translateY(-6px)}
+.price-card.popular{border-color:rgba(61,129,227,.5);background:rgba(61,129,227,.06)}
+.price-badge{display:inline-block;font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:.3rem .75rem;border-radius:9999px;background:rgba(61,129,227,.2);color:#3D81E3;margin-bottom:.5rem}
+.price-amount{font-size:2.5rem;font-weight:800;letter-spacing:-.04em}
+.price-amount span{font-size:1rem;font-weight:400;color:rgba(255,255,255,.5)}
+.price-desc{font-size:.8rem;color:rgba(255,255,255,.45);line-height:1.5}
+.price-features{list-style:none;display:flex;flex-direction:column;gap:.625rem}
+.price-feature{display:flex;align-items:center;gap:.6rem;font-size:.8rem;color:rgba(255,255,255,.7)}
+.price-check{width:16px;height:16px;border-radius:50%;background:rgba(61,129,227,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* TESTIMONIALS */
+.testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem;margin-top:3rem}
+.testi-card{border-radius:1rem;padding:1.5rem;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.02)}
+.testi-quote{font-size:.9rem;color:rgba(255,255,255,.75);line-height:1.65;margin-bottom:1.25rem}
+.testi-author{display:flex;align-items:center;gap:.75rem}
+.testi-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700}
+.testi-name{font-size:.85rem;font-weight:600}
+.testi-role{font-size:.75rem;color:rgba(255,255,255,.45)}
+
+/* FOOTER */
+.footer{border-top:1px solid rgba(255,255,255,.07);padding:3rem 1.5rem;max-width:72rem;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.footer-copy{font-size:.8rem;color:rgba(255,255,255,.35)}
+.footer-links{display:flex;gap:1.5rem}
+.footer-link{font-size:.8rem;color:rgba(255,255,255,.4);transition:color .2s}
+.footer-link:hover{color:#fff}
+
+/* ─── AUTH PAGES ─── */
+.auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background:#0c0c0c;position:relative;overflow:hidden}
+.auth-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(61,129,227,.12) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(0,210,255,.08) 0%,transparent 50%);pointer-events:none}
+.auth-card{width:100%;max-width:420px;background:rgba(20,22,28,.9);border:1px solid rgba(255,255,255,.08);border-radius:1.25rem;padding:2.5rem;backdrop-filter:blur(20px);position:relative;z-index:1}
+.auth-logo{display:flex;align-items:center;gap:.6rem;font-weight:700;font-size:1.1rem;margin-bottom:2rem;justify-content:center}
+.auth-title{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;margin-bottom:.5rem;text-align:center}
+.auth-subtitle{font-size:.875rem;color:rgba(255,255,255,.5);text-align:center;margin-bottom:2rem}
+.form-group{margin-bottom:1.25rem}
+.form-label{display:block;font-size:.8rem;font-weight:500;color:rgba(255,255,255,.7);margin-bottom:.5rem}
+.form-input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:.625rem;padding:.7rem 1rem;color:#fff;font-size:.875rem;transition:all .2s;outline:none}
+.form-input:focus{border-color:rgba(61,129,227,.6);background:rgba(61,129,227,.05);box-shadow:0 0 0 3px rgba(61,129,227,.1)}
+.form-input::placeholder{color:rgba(255,255,255,.25)}
+.auth-btn{width:100%;padding:.8rem;border-radius:.625rem;background:linear-gradient(135deg,#3D81E3,#1a5cbf);color:#fff;font-weight:600;font-size:.9rem;border:none;cursor:pointer;transition:all .2s;margin-top:.5rem}
+.auth-btn:hover{opacity:.9;transform:translateY(-1px)}
+.auth-btn:active{transform:scale(.99)}
+.auth-switch{text-align:center;margin-top:1.5rem;font-size:.8rem;color:rgba(255,255,255,.45)}
+.auth-switch a{color:#3D81E3;font-weight:500;cursor:pointer}
+.auth-switch a:hover{text-decoration:underline}
+.auth-divider{display:flex;align-items:center;gap:.75rem;margin:1.25rem 0;color:rgba(255,255,255,.2);font-size:.75rem}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.08)}
+.auth-error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:.5rem;padding:.75rem 1rem;font-size:.8rem;color:#f87171;margin-bottom:1rem;display:none}
+
+/* ─── DASHBOARD LAYOUT ─── */
+.dash-layout{display:flex;min-height:100vh;background:#0d0f14}
+.sidebar{width:240px;background:#0a0c10;border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;transition:transform .3s}
+.sidebar-logo{padding:1.25rem 1.25rem 1rem;display:flex;align-items:center;gap:.6rem;font-weight:700;font-size:1rem;border-bottom:1px solid rgba(255,255,255,.06)}
+.sidebar-nav{flex:1;padding:1rem .75rem;display:flex;flex-direction:column;gap:.25rem;overflow-y:auto}
+.sidebar-section{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.25);padding:.75rem .5rem .5rem;margin-top:.5rem}
+.sidebar-item{display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;border-radius:.5rem;font-size:.85rem;color:rgba(255,255,255,.55);transition:all .2s;cursor:pointer;border:none;background:transparent;width:100%;text-align:left}
+.sidebar-item:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.9)}
+.sidebar-item.active{background:rgba(61,129,227,.15);color:#3D81E3;font-weight:500}
+.sidebar-item svg{flex-shrink:0;opacity:.7}
+.sidebar-item.active svg{opacity:1}
+.sidebar-badge{margin-left:auto;font-size:.65rem;background:rgba(61,129,227,.2);color:#3D81E3;padding:1px 6px;border-radius:9999px;font-weight:600}
+.sidebar-footer{padding:1rem;border-top:1px solid rgba(255,255,255,.06)}
+.sidebar-user{display:flex;align-items:center;gap:.75rem}
+.sidebar-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#3D81E3,#00d2ff);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0}
+.sidebar-user-info .name{font-size:.8rem;font-weight:600}
+.sidebar-user-info .email{font-size:.65rem;color:rgba(255,255,255,.4)}
+.dash-main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{height:60px;background:#0a0c10;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;position:sticky;top:0;z-index:40}
+.topbar-title{font-size:1rem;font-weight:600;letter-spacing:-.01em}
+.topbar-actions{display:flex;align-items:center;gap:.75rem}
+.notif-btn{width:36px;height:36px;border-radius:.5rem;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;position:relative}
+.notif-btn:hover{background:rgba(255,255,255,.07)}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:#3D81E3;position:absolute;top:7px;right:7px}
+.dash-content{flex:1;padding:1.75rem;overflow-y:auto}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:.875rem;padding:1.25rem 1.5rem;transition:all .25s}
+.stat-card:hover{border-color:rgba(61,129,227,.2);background:rgba(61,129,227,.04)}
+.stat-label{font-size:.75rem;color:rgba(255,255,255,.45);font-weight:500;display:flex;align-items:center;gap:.4rem;margin-bottom:.75rem}
+.stat-value{font-size:2rem;font-weight:700;letter-spacing:-.03em;line-height:1}
+.stat-change{font-size:.75rem;margin-top:.4rem;display:flex;align-items:center;gap:.25rem}
+.stat-up{color:#34d399}
+.stat-down{color:#f87171}
+
+/* GRID SECTIONS */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem}
+.dash-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:.875rem;padding:1.25rem}
+.dash-card-title{font-size:.875rem;font-weight:600;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between}
+.dash-card-title span{font-size:.7rem;color:rgba(255,255,255,.4);font-weight:400}
+
+/* PIPELINE */
+.pipeline{display:flex;gap:.75rem;overflow-x:auto;padding-bottom:.5rem}
+.pipeline-col{min-width:160px;flex-shrink:0}
+.pipeline-header{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:.625rem;display:flex;align-items:center;justify-content:space-between}
+.pipeline-count{background:rgba(255,255,255,.08);border-radius:9999px;padding:1px 6px;font-size:.65rem}
+.pipeline-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:.5rem;padding:.75rem;margin-bottom:.5rem;cursor:pointer;transition:all .2s}
+.pipeline-card:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12)}
+.pipeline-company{font-size:.8rem;font-weight:600;margin-bottom:.2rem}
+.pipeline-role{font-size:.7rem;color:rgba(255,255,255,.45)}
+.pipeline-date{font-size:.65rem;color:rgba(255,255,255,.3);margin-top:.4rem}
+
+/* APPLICATIONS TABLE */
+.app-table{width:100%;border-collapse:collapse}
+.app-table th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.35);font-weight:500;padding:.75rem 1rem;text-align:left;border-bottom:1px solid rgba(255,255,255,.06)}
+.app-table td{padding:.875rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:.875rem;vertical-align:middle}
+.app-table tr:hover td{background:rgba(255,255,255,.02)}
+.app-table tr:last-child td{border-bottom:none}
+.status-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.7rem;font-weight:500;padding:.3rem .7rem;border-radius:9999px}
+.status-applied{background:rgba(99,102,241,.15);color:#a5b4fc}
+.status-screening{background:rgba(245,158,11,.12);color:#fbbf24}
+.status-interview{background:rgba(59,130,246,.15);color:#60a5fa}
+.status-offer{background:rgba(52,211,153,.12);color:#34d399}
+.status-rejected{background:rgba(239,68,68,.1);color:#f87171}
+.table-actions{display:flex;gap:.4rem}
+.action-btn{width:28px;height:28px;border-radius:.375rem;border:1px solid rgba(255,255,255,.08);background:transparent;color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.action-btn:hover{background:rgba(255,255,255,.07);color:#fff;border-color:rgba(255,255,255,.15)}
+.action-btn.del:hover{background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.2)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;animation:fadeIn .2s ease}
+.modal-overlay.hidden{display:none}
+.modal{background:#13161e;border:1px solid rgba(255,255,255,.1);border-radius:1.25rem;padding:2rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;animation:fadeUp .3s cubic-bezier(.22,1,.36,1)}
+.modal-title{font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between}
+.modal-close{width:28px;height:28px;border-radius:.375rem;border:none;background:rgba(255,255,255,.07);color:rgba(255,255,255,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-close:hover{background:rgba(255,255,255,.12);color:#fff}
+.modal-actions{display:flex;gap:.75rem;margin-top:1.5rem;justify-content:flex-end}
+.modal textarea{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+select.form-input{appearance:none}
+option{background:#13161e}
+
+/* PROGRESS BAR */
+.progress-bar{height:6px;background:rgba(255,255,255,.07);border-radius:9999px;overflow:hidden;margin:.5rem 0}
+.progress-fill{height:100%;border-radius:9999px;transition:width 1s cubic-bezier(.22,1,.36,1)}
+
+/* RESUME ANALYZER */
+.upload-zone{border:2px dashed rgba(255,255,255,.12);border-radius:1rem;padding:3rem 2rem;text-align:center;transition:all .3s;cursor:pointer;position:relative}
+.upload-zone:hover,.upload-zone.drag{border-color:rgba(61,129,227,.5);background:rgba(61,129,227,.05)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{width:48px;height:48px;border-radius:.75rem;background:rgba(61,129,227,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+.upload-title{font-size:1rem;font-weight:600;margin-bottom:.4rem}
+.upload-sub{font-size:.8rem;color:rgba(255,255,255,.4)}
+.analyzer-results{display:flex;flex-direction:column;gap:1.25rem;margin-top:1.5rem}
+.ats-score-ring{width:120px;height:120px;position:relative;margin:0 auto}
+.ats-ring-svg{width:120px;height:120px;transform:rotate(-90deg)}
+.ats-score-val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:1.75rem;font-weight:800;line-height:1}
+.ats-score-lbl{font-size:.65rem;color:rgba(255,255,255,.4);font-weight:400;margin-top:.2rem}
+.insight-chip{display:inline-flex;align-items:center;gap:.3rem;font-size:.75rem;padding:.35rem .75rem;border-radius:9999px;margin:.2rem}
+.chip-red{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.15)}
+.chip-green{background:rgba(52,211,153,.1);color:#34d399;border:1px solid rgba(52,211,153,.15)}
+.chip-blue{background:rgba(61,129,227,.1);color:#60a5fa;border:1px solid rgba(61,129,227,.15)}
+.chip-amber{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.15)}
+.loading-dots{display:flex;gap:.4rem;justify-content:center;align-items:center}
+.loading-dot{width:8px;height:8px;border-radius:50%;background:#3D81E3;animation:pulse 1.2s ease-in-out infinite}
+.loading-dot:nth-child(2){animation-delay:.2s}
+.loading-dot:nth-child(3){animation-delay:.4s}
+.skeleton{background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:.5rem}
+
+/* CHARTS */
+.chart-container{position:relative;width:100%;height:200px}
+canvas{display:block}
+
+/* ANALYTICS PAGE */
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem}
+
+/* SETTINGS */
+.settings-section{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:.875rem;padding:1.5rem;margin-bottom:1.25rem}
+.settings-title{font-size:.9rem;font-weight:600;margin-bottom:1.25rem;padding-bottom:.875rem;border-bottom:1px solid rgba(255,255,255,.06)}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:.625rem 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.settings-row:last-child{border-bottom:none}
+.settings-label{font-size:.85rem;color:rgba(255,255,255,.75)}
+.settings-sub{font-size:.75rem;color:rgba(255,255,255,.35);margin-top:.15rem}
+.toggle-switch{width:40px;height:22px;border-radius:9999px;background:rgba(255,255,255,.12);position:relative;cursor:pointer;transition:background .2s;border:none;flex-shrink:0}
+.toggle-switch.on{background:#3D81E3}
+.toggle-knob{width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:transform .2s}
+.toggle-switch.on .toggle-knob{transform:translateX(18px)}
+
+/* TOAST */
+.toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:1000;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
+.toast{background:#13161e;border:1px solid rgba(255,255,255,.1);border-radius:.75rem;padding:.875rem 1.25rem;font-size:.875rem;display:flex;align-items:center;gap:.75rem;animation:toast-in .3s ease;pointer-events:auto;min-width:280px;max-width:360px}
+.toast.success{border-color:rgba(52,211,153,.2);background:rgba(52,211,153,.05)}
+.toast.error{border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.05)}
+.toast-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.toast.success .toast-icon{background:rgba(52,211,153,.15);color:#34d399}
+.toast.error .toast-icon{background:rgba(239,68,68,.12);color:#f87171}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:4rem 2rem;color:rgba(255,255,255,.35)}
+.empty-icon{width:56px;height:56px;margin:0 auto 1rem;opacity:.3}
+.empty-title{font-size:1rem;font-weight:600;color:rgba(255,255,255,.5);margin-bottom:.4rem}
+.empty-sub{font-size:.8rem}
+
+/* MOBILE */
+.mobile-menu-btn{display:none}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:45}
+@media(max-width:768px){
+  .dash-main{margin-left:0}
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay.open{display:block}
+  .mobile-menu-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:.5rem;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);cursor:pointer;margin-right:.5rem}
+  .grid-2,.analytics-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .nav-links{display:none}
+  .hero-stats{flex-direction:column;gap:1.5rem}
+  .preview-stat-row{grid-template-columns:repeat(2,1fr)}
+  .hero h1{font-size:2.25rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     TOAST CONTAINER
+════════════════════════════════════════════════════ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: LANDING
+════════════════════════════════════════════════════ -->
+<div id="page-landing" class="page active">
+  <div class="land-bg">
+    <video autoplay loop muted playsinline>
+      <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260508_064122_c4750c0e-7476-4b44-94a2-a85a65c63bf2.mp4" type="video/mp4"/>
+    </video>
+  </div>
+  <div class="land-content">
+    <!-- NAV -->
+    <nav class="nav">
+      <div class="nav-inner">
+        <div class="nav-logo">
+          <svg class="nav-logo-mark" viewBox="0 0 256 256" fill="white">
+            <path d="M 0 128 C 70.692 128 128 185.308 128 256 L 64 256 C 64 220.654 35.346 192 0 192 Z M 256 192 C 220.654 192 192 220.654 192 256 L 128 256 C 128 185.308 185.308 128 256 128 Z M 128 0 C 128 70.692 70.692 128 0 128 L 0 64 C 35.346 64 64 35.346 64 0 Z M 192 0 C 192 35.346 220.654 64 256 64 L 256 128 C 185.308 128 128 70.692 128 0 Z"/>
+          </svg>
+          JobFlow
+        </div>
+        <div class="nav-links">
+          <a href="#features" class="nav-link" onclick="scrollTo('#features')">Features</a>
+          <a href="#pricing" class="nav-link" onclick="scrollTo('#pricing')">Pricing</a>
+          <a href="#testimonials" class="nav-link" onclick="scrollTo('#testimonials')">Reviews</a>
+          <a href="#" class="nav-link">Docs</a>
+        </div>
+        <div class="nav-actions">
+          <button class="btn btn-ghost btn-sm" onclick="navigate('login')">Sign in</button>
+          <button class="btn btn-white btn-sm" onclick="navigate('signup')">Get started free</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-eyebrow fade-up" style="animation-delay:.1s">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 1 7.92 12.446a9 9 0 1 1 -15.626 0A7.5 7.5 0 0 1 11.607 3z"/></svg>
+        Powered by GPT-4 AI
+      </div>
+      <h1 class="fade-up" style="animation-delay:.2s">
+        Land your dream job<br/>
+        <span class="gradient-text animate-shiny">faster with AI</span>
+      </h1>
+      <p class="fade-up" style="animation-delay:.3s">
+        JobFlow tracks every application, analyzes your resume with AI, and gives you real insights to optimize your job search — all in one beautiful dashboard.
+      </p>
+      <div class="hero-actions fade-up" style="animation-delay:.4s">
+        <button class="btn btn-white btn-lg" onclick="navigate('signup')">
+          Start for free
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-lg" onclick="navigate('login')">Sign in</button>
+      </div>
+      <div class="hero-stats fade-up" style="animation-delay:.5s">
+        <div>
+          <div class="hero-stat-val">12,400+</div>
+          <div class="hero-stat-label">Jobs tracked</div>
+        </div>
+        <div>
+          <div class="hero-stat-val">94%</div>
+          <div class="hero-stat-label">ATS accuracy</div>
+        </div>
+        <div>
+          <div class="hero-stat-val">3.2×</div>
+          <div class="hero-stat-label">More interviews</div>
+        </div>
+        <div>
+          <div class="hero-stat-val">4.9★</div>
+          <div class="hero-stat-label">User rating</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD PREVIEW -->
+    <div class="dash-preview">
+      <div class="dash-frame fade-up" style="animation-delay:.3s">
+        <div class="dash-titlebar">
+          <div class="dot" style="background:#ff5f57"></div>
+          <div class="dot" style="background:#febc2e"></div>
+          <div class="dot" style="background:#28c840"></div>
+          <span style="margin-left:.75rem;font-size:.75rem;color:rgba(255,255,255,.4)">JobFlow — Dashboard</span>
+        </div>
+        <div class="dash-preview-inner">
+          <div class="preview-sidebar">
+            <div class="preview-nav-item active-nav">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              Overview
+            </div>
+            <div class="preview-nav-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
+              Applications
+            </div>
+            <div class="preview-nav-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+              Resume AI
+            </div>
+            <div class="preview-nav-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              Analytics
+            </div>
+          </div>
+          <div class="preview-main">
+            <div class="preview-stat-row">
+              <div class="preview-stat"><div class="preview-stat-num" style="color:#3D81E3">24</div><div class="preview-stat-lbl">Applied</div></div>
+              <div class="preview-stat"><div class="preview-stat-num" style="color:#fbbf24">8</div><div class="preview-stat-lbl">Interviews</div></div>
+              <div class="preview-stat"><div class="preview-stat-num" style="color:#34d399">3</div><div class="preview-stat-lbl">Offers</div></div>
+              <div class="preview-stat"><div class="preview-stat-num" style="color:#a5b4fc">87</div><div class="preview-stat-lbl">ATS Score</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;flex:1">
+              <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:.5rem;padding:.75rem">
+                <div style="font-size:.65rem;color:rgba(255,255,255,.4);margin-bottom:.5rem">Application Pipeline</div>
+                <div style="display:flex;flex-direction:column;gap:.375rem">
+                  <div style="display:flex;justify-content:space-between;font-size:.65rem"><span>Applied</span><span style="color:#a5b4fc">12</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width:60%;background:#a5b4fc"></div></div>
+                  <div style="display:flex;justify-content:space-between;font-size:.65rem"><span>Interview</span><span style="color:#fbbf24">5</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width:35%;background:#fbbf24"></div></div>
+                  <div style="display:flex;justify-content:space-between;font-size:.65rem"><span>Offer</span><span style="color:#34d399">2</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width:15%;background:#34d399"></div></div>
+                </div>
+              </div>
+              <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:.5rem;padding:.75rem">
+                <div style="font-size:.65rem;color:rgba(255,255,255,.4);margin-bottom:.5rem">AI Resume Score</div>
+                <div style="text-align:center;padding-top:.25rem">
+                  <div style="font-size:2rem;font-weight:800;color:#3D81E3">87</div>
+                  <div style="font-size:.6rem;color:rgba(255,255,255,.35)">ATS Compatible</div>
+                  <div style="margin-top:.5rem;display:flex;gap:.25rem;flex-wrap:wrap;justify-content:center">
+                    <span style="font-size:.55rem;background:rgba(52,211,153,.1);color:#34d399;padding:1px 5px;border-radius:9999px">Strong</span>
+                    <span style="font-size:.55rem;background:rgba(61,129,227,.1);color:#60a5fa;padding:1px 5px;border-radius:9999px">Tech</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="section" id="features">
+      <div class="section-eyebrow">Features</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem">
+        <div>
+          <h2 class="section-title">Everything you need to<br/>dominate your job search</h2>
+        </div>
+        <p class="section-sub">From application tracking to AI-powered resume analysis — JobFlow has every tool you need.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3D81E3" stroke-width="2"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 1 7.92 12.446a9 9 0 1 1 -15.626 0A7.5 7.5 0 0 1 11.607 3z"/></svg>
+          </div>
+          <div class="feature-title">AI Resume Analyzer</div>
+          <div class="feature-desc">Get an instant ATS score, skill gap analysis, and personalized suggestions powered by GPT-4 to optimize your resume for any job.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3D81E3" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12h6M9 16h6"/></svg>
+          </div>
+          <div class="feature-title">Application Tracker</div>
+          <div class="feature-desc">Track every application with status updates, notes, interview dates, and job links. Never lose track of an opportunity again.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3D81E3" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
+          <div class="feature-title">Analytics Dashboard</div>
+          <div class="feature-desc">Visualize your job search performance with beautiful charts. See interview rates, offer conversions, and monthly activity trends.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3D81E3" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="feature-title">Pipeline Management</div>
+          <div class="feature-desc">Visualize your applications across a Kanban-style pipeline — from Applied to Offer. See exactly where every opportunity stands.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3D81E3" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="feature-title">Smart AI Insights</div>
+          <div class="feature-desc">Get personalized recommendations on which jobs to apply for, how to improve your profile, and what skills to develop next.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3D81E3" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div class="feature-title">Secure & Private</div>
+          <div class="feature-desc">Your data is encrypted and never shared. Full JWT authentication with bcrypt password hashing keeps your information safe.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TESTIMONIALS -->
+    <div class="section" id="testimonials">
+      <div class="section-eyebrow">Testimonials</div>
+      <h2 class="section-title">Loved by job seekers</h2>
+      <div class="testi-grid">
+        <div class="testi-card">
+          <p class="testi-quote">"JobFlow completely transformed my job search. The AI resume analyzer helped me increase my ATS score from 62 to 91, and I landed 3x more interviews within a month."</p>
+          <div class="testi-author">
+            <div class="testi-avatar" style="background:linear-gradient(135deg,#3D81E3,#00d2ff)">PW</div>
+            <div><div class="testi-name">Parker Wilson</div><div class="testi-role">Software Engineer at Stripe</div></div>
+          </div>
+        </div>
+        <div class="testi-card">
+          <p class="testi-quote">"The application tracker alone saved me hours every week. I could finally see the big picture of my job search instead of drowning in spreadsheets."</p>
+          <div class="testi-author">
+            <div class="testi-avatar" style="background:linear-gradient(135deg,#8b5cf6,#d946ef)">SR</div>
+            <div><div class="testi-name">Sarah Rodriguez</div><div class="testi-role">Product Manager at Linear</div></div>
+          </div>
+        </div>
+        <div class="testi-card">
+          <p class="testi-quote">"I was skeptical about AI tools, but the resume insights were incredibly actionable. Within 2 weeks of implementing the suggestions I had my first offer in years."</p>
+          <div class="testi-author">
+            <div class="testi-avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">MC</div>
+            <div><div class="testi-name">Marcus Chen</div><div class="testi-role">UX Designer at Vercel</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICING -->
+    <div class="section" id="pricing">
+      <div class="section-eyebrow">Pricing</div>
+      <h2 class="section-title">Simple, honest pricing</h2>
+      <div class="pricing-grid">
+        <div class="price-card">
+          <div>
+            <div class="price-amount">$0<span>/mo</span></div>
+            <div style="font-size:1rem;font-weight:700;margin-top:.5rem">Free</div>
+            <div class="price-desc" style="margin-top:.5rem">Perfect for getting started with your job search.</div>
+          </div>
+          <ul class="price-features">
+            <li class="price-feature"><span class="price-check">✓</span>Up to 15 applications</li>
+            <li class="price-feature"><span class="price-check">✓</span>Basic analytics</li>
+            <li class="price-feature"><span class="price-check">✓</span>3 AI resume analyses/month</li>
+            <li class="price-feature"><span class="price-check">✓</span>Application tracking</li>
+          </ul>
+          <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="navigate('signup')">Get started free</button>
+        </div>
+        <div class="price-card popular">
+          <div>
+            <div class="price-badge">Most popular</div>
+            <div class="price-amount">$12<span>/mo</span></div>
+            <div style="font-size:1rem;font-weight:700;margin-top:.5rem">Pro</div>
+            <div class="price-desc" style="margin-top:.5rem">For serious job seekers who want every advantage.</div>
+          </div>
+          <ul class="price-features">
+            <li class="price-feature"><span class="price-check">✓</span>Unlimited applications</li>
+            <li class="price-feature"><span class="price-check">✓</span>Advanced analytics</li>
+            <li class="price-feature"><span class="price-check">✓</span>Unlimited AI analyses</li>
+            <li class="price-feature"><span class="price-check">✓</span>AI interview prep</li>
+            <li class="price-feature"><span class="price-check">✓</span>Export to PDF</li>
+          </ul>
+          <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="navigate('signup')">Start Pro trial</button>
+        </div>
+        <div class="price-card">
+          <div>
+            <div class="price-amount">$29<span>/mo</span></div>
+            <div style="font-size:1rem;font-weight:700;margin-top:.5rem">Teams</div>
+            <div class="price-desc" style="margin-top:.5rem">For career coaches and placement agencies.</div>
+          </div>
+          <ul class="price-features">
+            <li class="price-feature"><span class="price-check">✓</span>Everything in Pro</li>
+            <li class="price-feature"><span class="price-check">✓</span>Up to 10 users</li>
+            <li class="price-feature"><span class="price-check">✓</span>Team analytics</li>
+            <li class="price-feature"><span class="price-check">✓</span>Priority support</li>
+            <li class="price-feature"><span class="price-check">✓</span>API access</li>
+          </ul>
+          <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="navigate('signup')">Contact sales</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="section">
+      <div style="background:linear-gradient(135deg,rgba(61,129,227,.15),rgba(0,210,255,.08));border:1px solid rgba(61,129,227,.2);border-radius:1.5rem;padding:4rem 2rem;text-align:center;position:relative;overflow:hidden">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(61,129,227,.2),transparent 60%);pointer-events:none"></div>
+        <div style="position:relative">
+          <h2 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:800;letter-spacing:-.03em;margin-bottom:1rem">Ready to land your dream job?</h2>
+          <p style="color:rgba(255,255,255,.6);margin-bottom:2rem;max-width:28rem;margin-left:auto;margin-right:auto">Join 12,400+ job seekers who use JobFlow to track applications, optimize resumes, and get hired faster.</p>
+          <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-white btn-lg" onclick="navigate('signup')">Get started — it's free</button>
+            <button class="btn btn-ghost btn-lg" onclick="navigate('login')">Sign in</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="border-top:1px solid rgba(255,255,255,.06)">
+      <div class="footer">
+        <div style="display:flex;align-items:center;gap:.6rem;font-weight:700">
+          <svg width="22" height="22" viewBox="0 0 256 256" fill="white"><path d="M 0 128 C 70.692 128 128 185.308 128 256 L 64 256 C 64 220.654 35.346 192 0 192 Z M 256 192 C 220.654 192 192 220.654 192 256 L 128 256 C 128 185.308 185.308 128 256 128 Z M 128 0 C 128 70.692 70.692 128 0 128 L 0 64 C 35.346 64 64 35.346 64 0 Z M 192 0 C 192 35.346 220.654 64 256 64 L 256 128 C 185.308 128 128 70.692 128 0 Z"/></svg>
+          JobFlow
+        </div>
+        <div class="footer-copy">© 2025 JobFlow. All rights reserved.</div>
+        <div class="footer-links">
+          <a href="#" class="footer-link">Privacy</a>
+          <a href="#" class="footer-link">Terms</a>
+          <a href="#" class="footer-link">Blog</a>
+          <a href="#" class="footer-link">Twitter</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: LOGIN
+════════════════════════════════════════════════════ -->
+<div id="page-login" class="page">
+  <div class="auth-page">
+    <div class="auth-bg"></div>
+    <div class="auth-card fade-up">
+      <div class="auth-logo">
+        <svg width="26" height="26" viewBox="0 0 256 256" fill="white"><path d="M 0 128 C 70.692 128 128 185.308 128 256 L 64 256 C 64 220.654 35.346 192 0 192 Z M 256 192 C 220.654 192 192 220.654 192 256 L 128 256 C 128 185.308 185.308 128 256 128 Z M 128 0 C 128 70.692 70.692 128 0 128 L 0 64 C 35.346 64 64 35.346 64 0 Z M 192 0 C 192 35.346 220.654 64 256 64 L 256 128 C 185.308 128 128 70.692 128 0 Z"/></svg>
+        JobFlow
+      </div>
+      <div class="auth-title">Welcome back</div>
+      <div class="auth-subtitle">Sign in to your account to continue</div>
+      <div class="auth-error" id="login-error"></div>
+      <div class="form-group">
+        <label class="form-label">Email address</label>
+        <input type="email" class="form-input" id="login-email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="login-password" placeholder="••••••••"/>
+      </div>
+      <button class="auth-btn" onclick="handleLogin()" id="login-btn">Sign in</button>
+      <div class="auth-divider">or</div>
+      <button class="auth-btn" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:.5rem;justify-content:center" onclick="handleDemoLogin()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 1 7.92 12.446a9 9 0 1 1 -15.626 0A7.5 7.5 0 0 1 11.607 3z"/></svg>
+        Try demo account
+      </button>
+      <div class="auth-switch">Don't have an account? <a onclick="navigate('signup')">Sign up free</a></div>
+      <div class="auth-switch" style="margin-top:.5rem"><a onclick="navigate('landing')" style="color:rgba(255,255,255,.3)">← Back to home</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: SIGNUP
+════════════════════════════════════════════════════ -->
+<div id="page-signup" class="page">
+  <div class="auth-page">
+    <div class="auth-bg"></div>
+    <div class="auth-card fade-up">
+      <div class="auth-logo">
+        <svg width="26" height="26" viewBox="0 0 256 256" fill="white"><path d="M 0 128 C 70.692 128 128 185.308 128 256 L 64 256 C 64 220.654 35.346 192 0 192 Z M 256 192 C 220.654 192 192 220.654 192 256 L 128 256 C 128 185.308 185.308 128 256 128 Z M 128 0 C 128 70.692 70.692 128 0 128 L 0 64 C 35.346 64 64 35.346 64 0 Z M 192 0 C 192 35.346 220.654 64 256 64 L 256 128 C 185.308 128 128 70.692 128 0 Z"/></svg>
+        JobFlow
+      </div>
+      <div class="auth-title">Create your account</div>
+      <div class="auth-subtitle">Start tracking your job search for free</div>
+      <div class="auth-error" id="signup-error"></div>
+      <div class="form-group">
+        <label class="form-label">Full name</label>
+        <input type="text" class="form-input" id="signup-name" placeholder="Alex Johnson"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email address</label>
+        <input type="email" class="form-input" id="signup-email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="signup-password" placeholder="At least 6 characters"/>
+      </div>
+      <button class="auth-btn" onclick="handleSignup()" id="signup-btn">Create account</button>
+      <div class="auth-switch">Already have an account? <a onclick="navigate('login')">Sign in</a></div>
+      <div class="auth-switch" style="margin-top:.5rem"><a onclick="navigate('landing')" style="color:rgba(255,255,255,.3)">← Back to home</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: DASHBOARD (shell shared by all dash tabs)
+════════════════════════════════════════════════════ -->
+<div id="page-dashboard" class="page">
+  <div class="dash-layout">
+    <!-- SIDEBAR OVERLAY (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <svg width="24" height="24" viewBox="0 0 256 256" fill="white"><path d="M 0 128 C 70.692 128 128 185.308 128 256 L 64 256 C 64 220.654 35.346 192 0 192 Z M 256 192 C 220.654 192 192 220.654 192 256 L 128 256 C 128 185.308 185.308 128 256 128 Z M 128 0 C 128 70.692 70.692 128 0 128 L 0 64 C 35.346 64 64 35.346 64 0 Z M 192 0 C 192 35.346 220.654 64 256 64 L 256 128 C 185.308 128 128 70.692 128 0 Z"/></svg>
+        JobFlow
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">Main</div>
+        <button class="sidebar-item active" id="nav-overview" onclick="showTab('overview')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Overview
+        </button>
+        <button class="sidebar-item" id="nav-applications" onclick="showTab('applications')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
+          Applications
+          <span class="sidebar-badge" id="app-count-badge">0</span>
+        </button>
+        <button class="sidebar-item" id="nav-resume" onclick="showTab('resume')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Resume AI
+        </button>
+        <button class="sidebar-item" id="nav-analytics" onclick="showTab('analytics')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Analytics
+        </button>
+        <div class="sidebar-section">Account</div>
+        <button class="sidebar-item" id="nav-settings" onclick="showTab('settings')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" id="sidebar-avatar-text">U</div>
+          <div class="sidebar-user-info">
+            <div class="name" id="sidebar-user-name">User</div>
+            <div class="email" id="sidebar-user-email">user@email.com</div>
+          </div>
+          <button onclick="handleLogout()" title="Logout" style="width:24px;height:24px;border-radius:.375rem;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:auto">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="dash-main">
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div style="display:flex;align-items:center">
+          <button class="mobile-menu-btn" onclick="openSidebar()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="topbar-title" id="topbar-title">Overview</div>
+        </div>
+        <div class="topbar-actions">
+          <div class="notif-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <div class="notif-dot"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.6rem">
+            <div class="sidebar-avatar" id="topbar-avatar" style="width:30px;height:30px;font-size:.7rem">U</div>
+            <span style="font-size:.8rem;font-weight:500" id="topbar-name">User</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="handleLogout()">Logout</button>
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <div class="dash-content">
+
+        <!-- ───── OVERVIEW TAB ───── -->
+        <div id="tab-overview" class="dash-tab">
+          <div class="stats-row" id="stats-row">
+            <div class="stat-card">
+              <div class="stat-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/></svg>Total Applied</div>
+              <div class="stat-value" id="stat-total">0</div>
+              <div class="stat-change stat-up"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>Track all applications</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/></svg>Interviews</div>
+              <div class="stat-value" id="stat-interviews" style="color:#fbbf24">0</div>
+              <div class="stat-change" id="stat-interview-rate" style="color:rgba(255,255,255,.4)">0% rate</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/></svg>Offers</div>
+              <div class="stat-value" id="stat-offers" style="color:#34d399">0</div>
+              <div class="stat-change stat-up">Keep going!</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>AI Score</div>
+              <div class="stat-value" id="stat-ats" style="color:#3D81E3">--</div>
+              <div class="stat-change" style="color:rgba(255,255,255,.4)">Latest resume analysis</div>
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-bottom:1.25rem">
+            <div class="dash-card">
+              <div class="dash-card-title">Application Pipeline <span>Drag to move (coming soon)</span></div>
+              <div class="pipeline" id="pipeline-view"></div>
+            </div>
+            <div class="dash-card">
+              <div class="dash-card-title">Status Breakdown</div>
+              <div id="status-breakdown"></div>
+            </div>
+          </div>
+
+          <div class="dash-card">
+            <div class="dash-card-title">Recent Applications <span onclick="showTab('applications')" style="cursor:pointer;color:#3D81E3">View all →</span></div>
+            <div id="recent-apps-table"></div>
+          </div>
+        </div>
+
+        <!-- ───── APPLICATIONS TAB ───── -->
+        <div id="tab-applications" class="dash-tab" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem">
+            <div>
+              <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:.25rem">Applications</h2>
+              <p style="font-size:.8rem;color:rgba(255,255,255,.4)">Track and manage all your job applications</p>
+            </div>
+            <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+              <input class="form-input" placeholder="Search applications..." id="app-search" oninput="renderAppsTable()" style="width:200px;padding:.5rem .875rem;font-size:.8rem"/>
+              <select class="form-input" id="app-filter" onchange="renderAppsTable()" style="width:150px;padding:.5rem .875rem;font-size:.8rem">
+                <option value="">All statuses</option>
+                <option value="Applied">Applied</option>
+                <option value="Screening">Screening</option>
+                <option value="Interview">Interview</option>
+                <option value="Offer">Offer</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Application
+              </button>
+            </div>
+          </div>
+          <div class="dash-card" style="padding:0">
+            <div id="apps-table-container" style="overflow-x:auto"></div>
+          </div>
+        </div>
+
+        <!-- ───── RESUME AI TAB ───── -->
+        <div id="tab-resume" class="dash-tab" style="display:none">
+          <div style="max-width:720px;margin:0 auto">
+            <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:.25rem">AI Resume Analyzer</h2>
+            <p style="font-size:.8rem;color:rgba(255,255,255,.4);margin-bottom:1.5rem">Upload your resume and get instant AI-powered feedback, ATS scoring, and improvement suggestions.</p>
+
+            <div class="dash-card" style="margin-bottom:1.25rem">
+              <div class="dash-card-title">Upload Resume</div>
+              <div class="upload-zone" id="uploadZone">
+                <input type="file" accept=".pdf,.txt,.doc,.docx" id="resumeFile" onchange="handleFileSelect(event)"/>
+                <div class="upload-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3D81E3" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <div class="upload-title">Drop your resume here</div>
+                <div class="upload-sub">PDF, TXT, DOC supported — we'll extract the text and analyze it</div>
+              </div>
+              <div id="file-selected" style="display:none;margin-top:1rem;padding:.75rem 1rem;background:rgba(61,129,227,.08);border:1px solid rgba(61,129,227,.2);border-radius:.625rem;display:none;align-items:center;gap:.75rem">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D81E3" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                <span id="file-name" style="font-size:.85rem;flex:1"></span>
+                <button class="btn btn-primary btn-sm" onclick="analyzeResume()" id="analyze-btn">Analyze with AI</button>
+              </div>
+            </div>
+
+            <!-- Job Description input -->
+            <div class="dash-card" style="margin-bottom:1.25rem">
+              <div class="dash-card-title">Target Job Description (Optional)</div>
+              <textarea class="form-input" id="jobDescription" placeholder="Paste the job description here to get tailored analysis and skill match scoring..." style="min-height:100px;resize:vertical"></textarea>
+            </div>
+
+            <!-- Loading state -->
+            <div id="resume-loading" style="display:none;text-align:center;padding:3rem;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:.875rem;margin-bottom:1.25rem">
+              <div class="loading-dots" style="margin-bottom:1.25rem">
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+              </div>
+              <div style="font-size:.9rem;font-weight:600;margin-bottom:.4rem">Analyzing your resume...</div>
+              <div style="font-size:.8rem;color:rgba(255,255,255,.4)">GPT-4 is reviewing your resume for ATS compatibility, skills, and improvement opportunities</div>
+            </div>
+
+            <!-- Results -->
+            <div id="resume-results" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- ───── ANALYTICS TAB ───── -->
+        <div id="tab-analytics" class="dash-tab" style="display:none">
+          <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.25rem">Analytics</h2>
+          <div class="stats-row" style="margin-bottom:1.25rem">
+            <div class="stat-card">
+              <div class="stat-label">Total Applications</div>
+              <div class="stat-value" id="a-stat-total">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Interview Rate</div>
+              <div class="stat-value" id="a-stat-ir" style="color:#fbbf24">0%</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Offer Rate</div>
+              <div class="stat-value" id="a-stat-or" style="color:#34d399">0%</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Rejection Rate</div>
+              <div class="stat-value" id="a-stat-rr" style="color:#f87171">0%</div>
+            </div>
+          </div>
+          <div class="analytics-grid">
+            <div class="dash-card">
+              <div class="dash-card-title">Applications by Status</div>
+              <div class="chart-container" style="height:220px">
+                <canvas id="statusChart"></canvas>
+              </div>
+            </div>
+            <div class="dash-card">
+              <div class="dash-card-title">Monthly Activity</div>
+              <div class="chart-container" style="height:220px">
+                <canvas id="monthlyChart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="dash-card" style="margin-top:1.25rem">
+            <div class="dash-card-title">Top Companies Applied To</div>
+            <div id="top-companies"></div>
+          </div>
+        </div>
+
+        <!-- ───── SETTINGS TAB ───── -->
+        <div id="tab-settings" class="dash-tab" style="display:none">
+          <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.25rem">Settings</h2>
+          <div class="settings-section">
+            <div class="settings-title">Profile</div>
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" class="form-input" id="settings-name"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-input" id="settings-email"/>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save changes</button>
+          </div>
+          <div class="settings-section">
+            <div class="settings-title">Preferences</div>
+            <div class="settings-row">
+              <div><div class="settings-label">Email notifications</div><div class="settings-sub">Receive weekly job search summaries</div></div>
+              <button class="toggle-switch on" id="toggle-notif" onclick="toggleSwitch('toggle-notif')"><div class="toggle-knob"></div></button>
+            </div>
+            <div class="settings-row">
+              <div><div class="settings-label">AI suggestions</div><div class="settings-sub">Show AI-powered job recommendations</div></div>
+              <button class="toggle-switch on" id="toggle-ai" onclick="toggleSwitch('toggle-ai')"><div class="toggle-knob"></div></button>
+            </div>
+            <div class="settings-row">
+              <div><div class="settings-label">Dark mode</div><div class="settings-sub">Always use dark theme</div></div>
+              <button class="toggle-switch on" id="toggle-dark" onclick="toggleSwitch('toggle-dark')"><div class="toggle-knob"></div></button>
+            </div>
+          </div>
+          <div class="settings-section">
+            <div class="settings-title" style="color:#f87171">Danger Zone</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+              <div><div class="settings-label">Delete all data</div><div class="settings-sub">Permanently remove all applications and analyses</div></div>
+              <button class="btn btn-danger btn-sm" onclick="clearAllData()">Delete all data</button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /dash-content -->
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     MODAL: ADD / EDIT APPLICATION
+════════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="appModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-title-text">Add Application</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <input type="hidden" id="edit-app-id"/>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Company *</label>
+        <input type="text" class="form-input" id="app-company" placeholder="Google"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role *</label>
+        <input type="text" class="form-input" id="app-role" placeholder="Software Engineer"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-input" id="app-status">
+          <option>Applied</option>
+          <option>Screening</option>
+          <option>Interview</option>
+          <option>Offer</option>
+          <option>Rejected</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Applied Date</label>
+        <input type="date" class="form-input" id="app-date"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Job Link</label>
+      <input type="url" class="form-input" id="app-link" placeholder="https://jobs.company.com/..."/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="form-input modal" id="app-notes" placeholder="Interview notes, contact info, salary range..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveApplication()">Save Application</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SCRIPT
+════════════════════════════════════════════════════ -->
+<script>
+// ═══════ STATE ═══════
+var currentUser = null;
+var currentTab = 'overview';
+var editingAppId = null;
+var chartInstances = {};
+
+// ═══════ INIT ═══════
+window.addEventListener('load', function(){
+  var token = localStorage.getItem('jf_token');
+  if(token){
+    try{
+      currentUser = JSON.parse(atob(token));
+      navigate('dashboard');
+    }catch(e){
+      localStorage.removeItem('jf_token');
+    }
+  }
+  // Set today's date as default in modal
+  document.getElementById('app-date').value = new Date().toISOString().split('T')[0];
+});
+
+// ═══════ ROUTER ═══════
+function navigate(page){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  var el = document.getElementById('page-'+page);
+  if(!el){ page='landing'; el=document.getElementById('page-landing'); }
+  el.classList.add('active');
+  window.scrollTo(0,0);
+  if(page==='dashboard'){
+    populateUserUI();
+    showTab(currentTab || 'overview');
+  }
+  if(page==='login'||page==='signup'){
+    document.getElementById('login-error').style.display='none';
+    var se=document.getElementById('signup-error');
+    if(se) se.style.display='none';
+  }
+}
+
+// ═══════ AUTH ═══════
+function getUsers(){ return JSON.parse(localStorage.getItem('jf_users')||'[]'); }
+function saveUsers(u){ localStorage.setItem('jf_users',JSON.stringify(u)); }
+function simpleHash(str){ var h=0; for(var i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;} return h.toString(36); }
+
+function handleSignup(){
+  var name=document.getElementById('signup-name').value.trim();
+  var email=document.getElementById('signup-email').value.trim().toLowerCase();
+  var pw=document.getElementById('signup-password').value;
+  var errEl=document.getElementById('signup-error');
+  errEl.style.display='none';
+  if(!name){errEl.textContent='Name is required.';errEl.style.display='block';return;}
+  if(!email||!email.includes('@')){errEl.textContent='Valid email required.';errEl.style.display='block';return;}
+  if(pw.length<6){errEl.textContent='Password must be at least 6 characters.';errEl.style.display='block';return;}
+  var users=getUsers();
+  if(users.find(function(u){return u.email===email;})){errEl.textContent='An account with this email already exists.';errEl.style.display='block';return;}
+  var user={id:Date.now().toString(),name:name,email:email,passwordHash:simpleHash(pw),createdAt:new Date().toISOString()};
+  users.push(user);
+  saveUsers(users);
+  var token=btoa(JSON.stringify({id:user.id,name:user.name,email:user.email}));
+  localStorage.setItem('jf_token',token);
+  currentUser={id:user.id,name:user.name,email:user.email};
+  // seed demo data
+  seedDemoData(user.id);
+  toast('Account created! Welcome to JobFlow 🎉','success');
+  navigate('dashboard');
+}
+
+function handleLogin(){
+  var email=document.getElementById('login-email').value.trim().toLowerCase();
+  var pw=document.getElementById('login-password').value;
+  var errEl=document.getElementById('login-error');
+  errEl.style.display='none';
+  if(!email||!pw){errEl.textContent='Please enter email and password.';errEl.style.display='block';return;}
+  var users=getUsers();
+  var user=users.find(function(u){return u.email===email;});
+  if(!user||user.passwordHash!==simpleHash(pw)){errEl.textContent='Invalid email or password.';errEl.style.display='block';return;}
+  var token=btoa(JSON.stringify({id:user.id,name:user.name,email:user.email}));
+  localStorage.setItem('jf_token',token);
+  currentUser={id:user.id,name:user.name,email:user.email};
+  toast('Welcome back, '+user.name+'!','success');
+  navigate('dashboard');
+}
+
+function handleDemoLogin(){
+  var users=getUsers();
+  var demoEmail='demo@jobflow.app';
+  var user=users.find(function(u){return u.email===demoEmail;});
+  if(!user){
+    user={id:'demo_'+Date.now(),name:'Alex Johnson',email:demoEmail,passwordHash:'demo',createdAt:new Date().toISOString()};
+    users.push(user);
+    saveUsers(users);
+    seedDemoData(user.id);
+  }
+  var token=btoa(JSON.stringify({id:user.id,name:user.name,email:user.email}));
+  localStorage.setItem('jf_token',token);
+  currentUser={id:user.id,name:user.name,email:user.email};
+  toast('Logged in as demo account!','success');
+  navigate('dashboard');
+}
+
+function handleLogout(){
+  localStorage.removeItem('jf_token');
+  currentUser=null;
+  currentTab='overview';
+  toast('Signed out successfully','success');
+  navigate('landing');
+}
+
+// ═══════ DEMO DATA SEEDER ═══════
+function seedDemoData(uid){
+  var apps=getApps(uid);
+  if(apps.length>0) return;
+  var demo=[
+    {id:genId(),userId:uid,company:'Stripe',role:'Frontend Engineer',status:'Interview',notes:'Technical screen went well. Final round next week.',appliedDate:'2025-05-01',jobLink:'https://stripe.com/jobs',createdAt:new Date().toISOString()},
+    {id:genId(),userId:uid,company:'Vercel',role:'Software Engineer',status:'Screening',notes:'Recruiter reached out.',appliedDate:'2025-05-05',jobLink:'https://vercel.com/careers',createdAt:new Date().toISOString()},
+    {id:genId(),userId:uid,company:'Linear',role:'Product Engineer',status:'Applied',notes:'Applied via LinkedIn.',appliedDate:'2025-05-08',jobLink:'https://linear.app/jobs',createdAt:new Date().toISOString()},
+    {id:genId(),userId:uid,company:'Figma',role:'Full Stack Developer',status:'Offer',notes:'Offer: $160k base + equity.',appliedDate:'2025-04-20',jobLink:'https://figma.com/careers',createdAt:new Date().toISOString()},
+    {id:genId(),userId:uid,company:'Notion',role:'React Developer',status:'Rejected',notes:'Not a good culture fit per recruiter.',appliedDate:'2025-04-15',jobLink:'https://notion.so/careers',createdAt:new Date().toISOString()},
+    {id:genId(),userId:uid,company:'Anthropic',role:'AI Engineer',status:'Applied',notes:'Dream job! Excited about this one.',appliedDate:'2025-05-10',jobLink:'https://anthropic.com/careers',createdAt:new Date().toISOString()},
+    {id:genId(),userId:uid,company:'GitHub',role:'Senior Engineer',status:'Interview',notes:'3rd round with engineering manager.',appliedDate:'2025-04-28',jobLink:'https://github.com/about/careers',createdAt:new Date().toISOString()},
+  ];
+  localStorage.setItem('jf_apps_'+uid,JSON.stringify(demo));
+}
+
+// ═══════ APPLICATIONS CRUD ═══════
+function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+function getApps(uid){ return JSON.parse(localStorage.getItem('jf_apps_'+(uid||currentUser.id))||'[]'); }
+function saveApps(apps){ localStorage.setItem('jf_apps_'+currentUser.id,JSON.stringify(apps)); }
+
+function openAddModal(){
+  editingAppId=null;
+  document.getElementById('modal-title-text').textContent='Add Application';
+  document.getElementById('edit-app-id').value='';
+  document.getElementById('app-company').value='';
+  document.getElementById('app-role').value='';
+  document.getElementById('app-status').value='Applied';
+  document.getElementById('app-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('app-link').value='';
+  document.getElementById('app-notes').value='';
+  document.getElementById('appModal').classList.remove('hidden');
+}
+
+function openEditModal(id){
+  var apps=getApps();
+  var app=apps.find(function(a){return a.id===id;});
+  if(!app) return;
+  editingAppId=id;
+  document.getElementById('modal-title-text').textContent='Edit Application';
+  document.getElementById('edit-app-id').value=id;
+  document.getElementById('app-company').value=app.company||'';
+  document.getElementById('app-role').value=app.role||'';
+  document.getElementById('app-status').value=app.status||'Applied';
+  document.getElementById('app-date').value=app.appliedDate||'';
+  document.getElementById('app-link').value=app.jobLink||'';
+  document.getElementById('app-notes').value=app.notes||'';
+  document.getElementById('appModal').classList.remove('hidden');
+}
+
+function closeModal(){ document.getElementById('appModal').classList.add('hidden'); }
+
+function saveApplication(){
+  var company=document.getElementById('app-company').value.trim();
+  var role=document.getElementById('app-role').value.trim();
+  if(!company||!role){toast('Company and role are required','error');return;}
+  var apps=getApps();
+  var app={
+    id:editingAppId||genId(),
+    userId:currentUser.id,
+    company:company,
+    role:role,
+    status:document.getElementById('app-status').value,
+    appliedDate:document.getElementById('app-date').value,
+    jobLink:document.getElementById('app-link').value.trim(),
+    notes:document.getElementById('app-notes').value.trim(),
+    createdAt:editingAppId?(apps.find(function(a){return a.id===editingAppId;})||{}).createdAt||new Date().toISOString():new Date().toISOString()
+  };
+  if(editingAppId){
+    var idx=apps.findIndex(function(a){return a.id===editingAppId;});
+    if(idx>-1) apps[idx]=app;
+  } else {
+    apps.unshift(app);
+  }
+  saveApps(apps);
+  closeModal();
+  toast((editingAppId?'Application updated':'Application added')+' ✓','success');
+  refreshDashboard();
+}
+
+function deleteApp(id){
+  if(!confirm('Delete this application?')) return;
+  var apps=getApps().filter(function(a){return a.id!==id;});
+  saveApps(apps);
+  toast('Application deleted','success');
+  refreshDashboard();
+}
+
+// ═══════ UI HELPERS ═══════
+function populateUserUI(){
+  if(!currentUser) return;
+  var initials=currentUser.name.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+  document.getElementById('sidebar-avatar-text').textContent=initials;
+  document.getElementById('topbar-avatar').textContent=initials;
+  document.getElementById('sidebar-user-name').textContent=currentUser.name;
+  document.getElementById('sidebar-user-email').textContent=currentUser.email;
+  document.getElementById('topbar-name').textContent=currentUser.name.split(' ')[0];
+  document.getElementById('settings-name').value=currentUser.name;
+  document.getElementById('settings-email').value=currentUser.email;
+}
+
+function showTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.dash-tab').forEach(function(t){t.style.display='none';});
+  document.querySelectorAll('.sidebar-item').forEach(function(b){b.classList.remove('active');});
+  var tabEl=document.getElementById('tab-'+tab);
+  if(tabEl) tabEl.style.display='block';
+  var navEl=document.getElementById('nav-'+tab);
+  if(navEl) navEl.classList.add('active');
+  var titles={overview:'Overview',applications:'Applications',resume:'Resume AI',analytics:'Analytics',settings:'Settings'};
+  document.getElementById('topbar-title').textContent=titles[tab]||tab;
+  closeSidebar();
+  if(tab==='overview') renderOverview();
+  if(tab==='applications') renderAppsTable();
+  if(tab==='analytics') renderAnalytics();
+}
+
+function refreshDashboard(){
+  updateAppBadge();
+  if(currentTab==='overview') renderOverview();
+  if(currentTab==='applications') renderAppsTable();
+  if(currentTab==='analytics') renderAnalytics();
+}
+
+function updateAppBadge(){
+  var count=getApps().length;
+  document.getElementById('app-count-badge').textContent=count;
+}
+
+// ═══════ OVERVIEW ═══════
+function renderOverview(){
+  var apps=getApps();
+  var total=apps.length;
+  var interviews=apps.filter(function(a){return a.status==='Interview';}).length;
+  var offers=apps.filter(function(a){return a.status==='Offer';}).length;
+  document.getElementById('stat-total').textContent=total;
+  document.getElementById('stat-interviews').textContent=interviews;
+  document.getElementById('stat-offers').textContent=offers;
+  document.getElementById('stat-interview-rate').textContent=(total?Math.round(interviews/total*100):0)+'% rate';
+  updateAppBadge();
+  // last AI score
+  var analyses=JSON.parse(localStorage.getItem('jf_analyses_'+currentUser.id)||'[]');
+  if(analyses.length>0){
+    document.getElementById('stat-ats').textContent=analyses[analyses.length-1].atsScore||'--';
+  }
+  renderPipeline(apps);
+  renderStatusBreakdown(apps);
+  renderRecentApps(apps);
+}
+
+function statusBadge(s){
+  var cls={Applied:'status-applied',Screening:'status-screening',Interview:'status-interview',Offer:'status-offer',Rejected:'status-rejected'};
+  return '<span class="status-badge '+(cls[s]||'')+'">'+s+'</span>';
+}
+
+function renderPipeline(apps){
+  var statuses=['Applied','Screening','Interview','Offer','Rejected'];
+  var colors={Applied:'#a5b4fc',Screening:'#fbbf24',Interview:'#60a5fa',Offer:'#34d399',Rejected:'#f87171'};
+  var html='';
+  statuses.forEach(function(s){
+    var items=apps.filter(function(a){return a.status===s;});
+    html+='<div class="pipeline-col"><div class="pipeline-header" style="color:'+colors[s]+'">'+s+'<span class="pipeline-count">'+items.length+'</span></div>';
+    if(items.length===0){html+='<div style="font-size:.7rem;color:rgba(255,255,255,.2);text-align:center;padding:.5rem">None</div>';}
+    items.slice(0,3).forEach(function(a){
+      html+='<div class="pipeline-card" onclick="openEditModal(\''+a.id+'\')">'
+        +'<div class="pipeline-company">'+escHtml(a.company)+'</div>'
+        +'<div class="pipeline-role">'+escHtml(a.role)+'</div>'
+        +'<div class="pipeline-date">'+formatDate(a.appliedDate)+'</div>'
+        +'</div>';
+    });
+    if(items.length>3) html+='<div style="font-size:.65rem;color:rgba(255,255,255,.35);text-align:center;padding:.25rem">+'+( items.length-3)+' more</div>';
+    html+='</div>';
+  });
+  document.getElementById('pipeline-view').innerHTML=html;
+}
+
+function renderStatusBreakdown(apps){
+  var statuses=['Applied','Screening','Interview','Offer','Rejected'];
+  var colors={Applied:'#a5b4fc',Screening:'#fbbf24',Interview:'#60a5fa',Offer:'#34d399',Rejected:'#f87171'};
+  var total=apps.length||1;
+  var html='';
+  statuses.forEach(function(s){
+    var cnt=apps.filter(function(a){return a.status===s;}).length;
+    var pct=Math.round(cnt/total*100);
+    html+='<div style="margin-bottom:.875rem">'
+      +'<div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.3rem"><span>'+s+'</span><span style="color:'+colors[s]+'">'+cnt+'</span></div>'
+      +'<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%;background:'+colors[s]+'"></div></div>'
+      +'</div>';
+  });
+  document.getElementById('status-breakdown').innerHTML=html||'<div class="empty-state"><div class="empty-title">No applications yet</div></div>';
+}
+
+function renderRecentApps(apps){
+  if(apps.length===0){
+    document.getElementById('recent-apps-table').innerHTML='<div class="empty-state"><svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg><div class="empty-title">No applications yet</div><div class="empty-sub">Click "Add Application" to get started</div></div>';
+    return;
+  }
+  var recent=apps.slice(0,5);
+  var html='<table class="app-table"><thead><tr><th>Company</th><th>Role</th><th>Status</th><th>Date</th></tr></thead><tbody>';
+  recent.forEach(function(a){
+    html+='<tr><td style="font-weight:500">'+escHtml(a.company)+'</td><td style="color:rgba(255,255,255,.65)">'+escHtml(a.role)+'</td><td>'+statusBadge(a.status)+'</td><td style="color:rgba(255,255,255,.4);font-size:.8rem">'+formatDate(a.appliedDate)+'</td></tr>';
+  });
+  html+='</tbody></table>';
+  document.getElementById('recent-apps-table').innerHTML=html;
+}
+
+// ═══════ APPLICATIONS TABLE ═══════
+function renderAppsTable(){
+  var apps=getApps();
+  var search=(document.getElementById('app-search')||{}).value||'';
+  var filter=(document.getElementById('app-filter')||{}).value||'';
+  if(search) apps=apps.filter(function(a){return (a.company+a.role+a.notes).toLowerCase().includes(search.toLowerCase());});
+  if(filter) apps=apps.filter(function(a){return a.status===filter;});
+  var container=document.getElementById('apps-table-container');
+  if(!container) return;
+  if(apps.length===0){
+    container.innerHTML='<div class="empty-state"><svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/></svg><div class="empty-title">No applications found</div><div class="empty-sub">Try adjusting your search or filters</div></div>';
+    return;
+  }
+  var html='<table class="app-table"><thead><tr><th>Company</th><th>Role</th><th>Status</th><th>Applied</th><th>Notes</th><th>Actions</th></tr></thead><tbody>';
+  apps.forEach(function(a){
+    html+='<tr>'
+      +'<td><div style="font-weight:600">'+escHtml(a.company)+'</div>'+(a.jobLink?'<a href="'+escHtml(a.jobLink)+'" target="_blank" style="font-size:.7rem;color:#3D81E3">View job ↗</a>':'')+'</td>'
+      +'<td style="color:rgba(255,255,255,.75)">'+escHtml(a.role)+'</td>'
+      +'<td>'+statusBadge(a.status)+'</td>'
+      +'<td style="font-size:.8rem;color:rgba(255,255,255,.45)">'+formatDate(a.appliedDate)+'</td>'
+      +'<td style="font-size:.75rem;color:rgba(255,255,255,.45);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(a.notes||'—')+'</td>'
+      +'<td><div class="table-actions">'
+      +'<button class="action-btn" onclick="openEditModal(\''+a.id+'\')" title="Edit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+      +'<button class="action-btn del" onclick="deleteApp(\''+a.id+'\')" title="Delete"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>'
+      +'</div></td>'
+      +'</tr>';
+  });
+  html+='</tbody></table>';
+  container.innerHTML=html;
+}
+
+// ═══════ ANALYTICS ═══════
+function renderAnalytics(){
+  var apps=getApps();
+  var total=apps.length;
+  var interviews=apps.filter(function(a){return a.status==='Interview'||a.status==='Offer';}).length;
+  var offers=apps.filter(function(a){return a.status==='Offer';}).length;
+  var rejected=apps.filter(function(a){return a.status==='Rejected';}).length;
+  document.getElementById('a-stat-total').textContent=total;
+  document.getElementById('a-stat-ir').textContent=total?Math.round(interviews/total*100)+'%':'0%';
+  document.getElementById('a-stat-or').textContent=total?Math.round(offers/total*100)+'%':'0%';
+  document.getElementById('a-stat-rr').textContent=total?Math.round(rejected/total*100)+'%':'0%';
+  drawStatusChart(apps);
+  drawMonthlyChart(apps);
+  renderTopCompanies(apps);
+}
+
+function drawStatusChart(apps){
+  var canvas=document.getElementById('statusChart');
+  if(!canvas) return;
+  if(chartInstances['status']){ chartInstances['status']={} }
+  var ctx=canvas.getContext('2d');
+  var statuses=['Applied','Screening','Interview','Offer','Rejected'];
+  var colors=['#a5b4fc','#fbbf24','#60a5fa','#34d399','#f87171'];
+  var data=statuses.map(function(s){return apps.filter(function(a){return a.status===s;}).length;});
+  var total=data.reduce(function(a,b){return a+b;},0)||1;
+  // Simple donut chart via canvas
+  var W=canvas.width=canvas.offsetWidth||300;
+  var H=canvas.height=220;
+  var cx=W/2,cy=H/2,r=Math.min(cx,cy)-20,ir=r*0.55;
+  ctx.clearRect(0,0,W,H);
+  var startAngle=-Math.PI/2;
+  data.forEach(function(val,i){
+    if(val===0) return;
+    var slice=(val/total)*Math.PI*2;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,startAngle,startAngle+slice);
+    ctx.closePath();
+    ctx.fillStyle=colors[i];
+    ctx.fill();
+    startAngle+=slice;
+  });
+  // inner circle
+  ctx.beginPath();
+  ctx.arc(cx,cy,ir,0,Math.PI*2);
+  ctx.fillStyle='#0d0f14';
+  ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.font='bold 20px Inter, sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText(total,cx,cy+2);
+  ctx.font='11px Inter, sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.4)';
+  ctx.fillText('total',cx,cy+16);
+  // legend
+  ctx.textAlign='left';
+  var legendX=10,legendY=20;
+  statuses.forEach(function(s,i){
+    if(data[i]===0) return;
+    ctx.fillStyle=colors[i];
+    ctx.fillRect(legendX,legendY-9,10,10);
+    ctx.fillStyle='rgba(255,255,255,0.6)';
+    ctx.font='10px Inter, sans-serif';
+    ctx.fillText(s+': '+data[i],legendX+14,legendY);
+    legendY+=18;
+  });
+}
+
+function drawMonthlyChart(apps){
+  var canvas=document.getElementById('monthlyChart');
+  if(!canvas) return;
+  var ctx=canvas.getContext('2d');
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var now=new Date();
+  var last6=[];
+  for(var i=5;i>=0;i--){
+    var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    last6.push({label:months[d.getMonth()],year:d.getFullYear(),month:d.getMonth()});
+  }
+  var data=last6.map(function(m){
+    return apps.filter(function(a){
+      var d=new Date(a.appliedDate||a.createdAt);
+      return d.getMonth()===m.month&&d.getFullYear()===m.year;
+    }).length;
+  });
+  var W=canvas.width=canvas.offsetWidth||300;
+  var H=canvas.height=220;
+  var pad={t:20,r:20,b:40,l:35};
+  var chartW=W-pad.l-pad.r;
+  var chartH=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+  var maxVal=Math.max.apply(null,data)||5;
+  // grid lines
+  for(var i=0;i<=4;i++){
+    var y=pad.t+chartH-(i/4)*chartH;
+    ctx.beginPath();
+    ctx.strokeStyle='rgba(255,255,255,0.06)';
+    ctx.lineWidth=1;
+    ctx.moveTo(pad.l,y);
+    ctx.lineTo(pad.l+chartW,y);
+    ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,0.3)';
+    ctx.font='10px Inter';
+    ctx.textAlign='right';
+    ctx.fillText(Math.round((i/4)*maxVal),pad.l-5,y+3);
+  }
+  // bars
+  var barW=Math.min(40,(chartW/last6.length)*0.6);
+  last6.forEach(function(m,i){
+    var val=data[i];
+    var x=pad.l+(i+0.5)*(chartW/last6.length);
+    var bh=(val/maxVal)*chartH;
+    var y=pad.t+chartH-bh;
+    var grad=ctx.createLinearGradient(0,y,0,y+bh);
+    grad.addColorStop(0,'#3D81E3');
+    grad.addColorStop(1,'rgba(61,129,227,0.2)');
+    ctx.fillStyle=grad;
+    ctx.beginPath();
+    ctx.roundRect?ctx.roundRect(x-barW/2,y,barW,bh,4):ctx.rect(x-barW/2,y,barW,bh);
+    ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.45)';
+    ctx.font='10px Inter';
+    ctx.textAlign='center';
+    ctx.fillText(m.label,x,H-pad.b+15);
+  });
+}
+
+function renderTopCompanies(apps){
+  var map={};
+  apps.forEach(function(a){map[a.company]=(map[a.company]||0)+1;});
+  var sorted=Object.entries(map).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+  var total=apps.length||1;
+  var html='';
+  var colors=['#3D81E3','#00d2ff','#a5b4fc','#34d399','#fbbf24'];
+  sorted.forEach(function(item,i){
+    var pct=Math.round(item[1]/total*100);
+    html+='<div style="display:flex;align-items:center;gap:.875rem;margin-bottom:.875rem">'
+      +'<div style="width:28px;height:28px;border-radius:.375rem;background:rgba(61,129,227,.12);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:'+colors[i]+'">'+item[0][0].toUpperCase()+'</div>'
+      +'<div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.3rem"><span>'+escHtml(item[0])+'</span><span style="color:rgba(255,255,255,.4)">'+item[1]+' app'+( item[1]>1?'s':'')+'</span></div>'
+      +'<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%;background:'+colors[i]+'"></div></div>'
+      +'</div></div>';
+  });
+  document.getElementById('top-companies').innerHTML=html||'<div style="color:rgba(255,255,255,.35);font-size:.85rem">No data yet</div>';
+}
+
+// ═══════ RESUME AI ═══════
+var resumeText='';
+
+function handleFileSelect(e){
+  var file=e.target.files[0];
+  if(!file) return;
+  document.getElementById('file-name').textContent=file.name+' ('+Math.round(file.size/1024)+'KB)';
+  document.getElementById('file-selected').style.display='flex';
+  // Read as text
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    resumeText=ev.target.result;
+    if(resumeText.includes('%PDF')||resumeText.includes('obj')&&resumeText.includes('endobj')){
+      // PDF binary — use filename as hint, extract what we can
+      resumeText='[PDF Resume uploaded: '+file.name+']\n\nNote: This is a PDF file. Please paste your resume text below for best results, or the AI will analyze based on the filename.';
+    }
+  };
+  reader.readAsText(file);
+}
+
+// Drag and drop
+(function(){
+  var zone=document.getElementById('uploadZone');
+  if(!zone) return;
+  zone.addEventListener('dragover',function(e){e.preventDefault();zone.classList.add('drag');});
+  zone.addEventListener('dragleave',function(){zone.classList.remove('drag');});
+  zone.addEventListener('drop',function(e){
+    e.preventDefault();
+    zone.classList.remove('drag');
+    var files=e.dataTransfer.files;
+    if(files.length){
+      document.getElementById('resumeFile').files=files;
+      handleFileSelect({target:{files:files}});
+    }
+  });
+})();
+
+async function analyzeResume(){
+  var btn=document.getElementById('analyze-btn');
+  var jd=document.getElementById('jobDescription').value.trim();
+  var fileInput=document.getElementById('resumeFile');
+
+  if(!fileInput.files[0]){toast('Please upload a resume file first','error');return;}
+
+  btn.disabled=true;
+  btn.textContent='Analyzing...';
+  document.getElementById('resume-loading').style.display='block';
+  document.getElementById('resume-results').style.display='none';
+
+  try {
+    var formData=new FormData();
+    formData.append('resume', fileInput.files[0]);
+    formData.append('jobDescription', jd);
+
+    var resp=await fetch('http://localhost:3001/api/analyze-resume',{
+      method:'POST',
+      body:formData
+      // ⚠️ No Content-Type header — browser sets it automatically
+    });
+
+    var data=await resp.json();
+
+    if(!resp.ok) throw new Error(data.error||'Analysis failed');
+
+    // save to localStorage
+    var analyses=JSON.parse(localStorage.getItem('jf_analyses_'+currentUser.id)||'[]');
+    analyses.push({...data, createdAt:new Date().toISOString()});
+    localStorage.setItem('jf_analyses_'+currentUser.id, JSON.stringify(analyses));
+
+    renderResumeResults(data);
+    toast('Resume analyzed successfully! ✓','success');
+
+  } catch(err){
+    console.error(err);
+    toast('Error: '+err.message,'error');
+  } finally {
+    btn.disabled=false;
+    btn.textContent='Analyze with AI';
+    document.getElementById('resume-loading').style.display='none';
+  }
+}
+
+
+function renderResumeResults(r){
+  var atsColor=r.atsScore>=80?'#34d399':r.atsScore>=60?'#fbbf24':'#f87171';
+  var smColor=r.skillMatchScore>=80?'#34d399':r.skillMatchScore>=60?'#fbbf24':'#f87171';
+  // SVG ring
+  var circ=2*Math.PI*45;
+  var dashArr=circ*(r.atsScore/100);
+  var html='<div class="analyzer-results">'
+    // Score row
+    +'<div class="dash-card" style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap">'
+      +'<div style="text-align:center;flex-shrink:0">'
+        +'<div class="ats-score-ring">'
+          +'<svg class="ats-ring-svg" viewBox="0 0 100 100">'
+            +'<circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8"/>'
+            +'<circle cx="50" cy="50" r="45" fill="none" stroke="'+atsColor+'" stroke-width="8" stroke-linecap="round" stroke-dasharray="'+dashArr+' '+circ+'" style="transition:stroke-dasharray 1s ease"/>'
+          +'</svg>'
+          +'<div class="ats-score-val" style="color:'+atsColor+'">'+r.atsScore+'<div class="ats-score-lbl">ATS Score</div></div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="flex:1">'
+        +'<div style="font-size:1.1rem;font-weight:700;margin-bottom:.4rem">'+escHtml(r.headline||'Resume Analysis')+'</div>'
+        +'<div style="font-size:.85rem;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:1rem">'+escHtml(r.summary||'')+'</div>'
+        +(r.skillMatchScore!==undefined?'<div style="display:flex;align-items:center;gap:.75rem"><div style="font-size:.8rem;color:rgba(255,255,255,.5)">Skill Match:</div><div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:'+r.skillMatchScore+'%;background:'+smColor+'"></div></div><div style="font-size:.8rem;color:'+smColor+'">'+r.skillMatchScore+'%</div></div>':'')
+      +'</div>'
+    +'</div>'
+    // Strengths / Weaknesses
+    +'<div class="grid-2">'
+      +'<div class="dash-card"><div class="dash-card-title" style="color:#34d399">✓ Strengths</div>'
+        +r.strengths.map(function(s){return '<div class="insight-chip chip-green">'+escHtml(s)+'</div>';}).join('')
+      +'</div>'
+      +'<div class="dash-card"><div class="dash-card-title" style="color:#f87171">⚠ Weaknesses</div>'
+        +r.weaknesses.map(function(s){return '<div class="insight-chip chip-red">'+escHtml(s)+'</div>';}).join('')
+      +'</div>'
+    +'</div>'
+    // Missing skills
+    +'<div class="dash-card"><div class="dash-card-title">Missing Skills <span>Add these to improve your ATS score</span></div>'
+      +r.missingSkills.map(function(s){return '<div class="insight-chip chip-amber">'+escHtml(s)+'</div>';}).join('')
+    +'</div>'
+    // Suggestions
+    +'<div class="dash-card"><div class="dash-card-title">💡 Improvement Suggestions</div>'
+      +'<div style="display:flex;flex-direction:column;gap:.75rem">'
+      +r.suggestions.map(function(s,i){return '<div style="display:flex;gap:.75rem;align-items:flex-start"><div style="width:22px;height:22px;border-radius:50%;background:rgba(61,129,227,.15);color:#3D81E3;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">'+(i+1)+'</div><div style="font-size:.85rem;color:rgba(255,255,255,.75);line-height:1.5">'+escHtml(s)+'</div></div>';}).join('')
+      +'</div>'
+    +'</div>'
+    // Suggested roles
+    +'<div class="dash-card"><div class="dash-card-title">🎯 Suggested Job Roles</div>'
+      +r.suggestedRoles.map(function(s){return '<div class="insight-chip chip-blue">'+escHtml(s)+'</div>';}).join('')
+    +'</div>'
+  +'</div>';
+  var el=document.getElementById('resume-results');
+  el.innerHTML=html;
+  el.style.display='block';
+}
+
+// ═══════ SETTINGS ═══════
+function saveProfile(){
+  var name=document.getElementById('settings-name').value.trim();
+  var email=document.getElementById('settings-email').value.trim();
+  if(!name||!email){toast('Name and email required','error');return;}
+  var users=getUsers();
+  var idx=users.findIndex(function(u){return u.id===currentUser.id;});
+  if(idx>-1){users[idx].name=name;users[idx].email=email;saveUsers(users);}
+  currentUser.name=name;currentUser.email=email;
+  var token=btoa(JSON.stringify(currentUser));
+  localStorage.setItem('jf_token',token);
+  populateUserUI();
+  toast('Profile saved ✓','success');
+}
+
+function toggleSwitch(id){
+  var el=document.getElementById(id);
+  el.classList.toggle('on');
+}
+
+function clearAllData(){
+  if(!confirm('Are you sure? This will delete ALL your applications and analyses permanently.')) return;
+  localStorage.removeItem('jf_apps_'+currentUser.id);
+  localStorage.removeItem('jf_analyses_'+currentUser.id);
+  toast('All data deleted','success');
+  refreshDashboard();
+}
+
+// ═══════ MOBILE SIDEBAR ═══════
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+// ═══════ TOAST ═══════
+function toast(msg,type){
+  type=type||'success';
+  var icons={success:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',error:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'};
+  var el=document.createElement('div');
+  el.className='toast '+type;
+  el.innerHTML='<div class="toast-icon">'+icons[type]+'</div><span>'+escHtml(msg)+'</span>';
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(function(){el.style.opacity='0';el.style.transform='translateY(8px)';el.style.transition='all .3s';setTimeout(function(){el.remove();},300);},3500);
+}
+
+// ═══════ UTILS ═══════
+function escHtml(str){
+  if(!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatDate(d){
+  if(!d) return '—';
+  try{
+    var dt=new Date(d);
+    return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  }catch(e){return d;}
+}
+function scrollTo(selector){
+  var el=document.querySelector(selector);
+  if(el) el.scrollIntoView({behavior:'smooth'});
+}
+
+// Close modal on overlay click
+document.getElementById('appModal').addEventListener('click',function(e){
+  if(e.target===this) closeModal();
+});
+
+// Re-draw charts on window resize
+window.addEventListener('resize',function(){
+  if(currentTab==='analytics') renderAnalytics();
+});
+</script>
+</body>
+</html>
